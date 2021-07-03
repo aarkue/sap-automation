@@ -1,4 +1,7 @@
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Map;
 
 import com.sap.conn.jco.JCoDestination;
@@ -61,6 +64,32 @@ public class ExampleRepository {
         function.execute(dest);
         String message=String.format("Create Inquiry with %s (BAPI_INQUIRY_CREATEFROMDATA2)",paramMap.toString());
         throwExceptionOnError(function);
+    }
+
+    public static void createProductionOrder(JCoDestination dest, Map<String,String> paramMap)  throws JCoException {
+        JCoRepository sapRepository = dest.getRepository();
+        JCoFunctionTemplate template = sapRepository.getFunctionTemplate("BAPI_PRODORD_CREATE");
+        JCoFunction function = template.getFunction();
+
+
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+
+        // ORDERDATA
+        JCoStructure orderData = function.getImportParameterList().getStructure("ORDERDATA");
+        orderData.setValue("MATERIAL",paramMap.get("MATERIAL"));
+        orderData.setValue("PLANT", paramMap.get("PLANT"));
+        orderData.setValue("PLANNING_PLANT", paramMap.get("PLANNING_PLANT"));
+        orderData.setValue("ORDER_TYPE", paramMap.get("ORDER_TYPE"));
+        orderData.setValue("QUANTITY", paramMap.get("QUANTITY"));
+        orderData.setValue("BASIC_END_DATE", paramMap.get("BASIC_END_DATE"));
+        function.getImportParameterList().setValue("ORDERDATA", orderData);
+
+        function.execute(dest);
+        String message=String.format("Create Inquiry with %s (BAPI_PRODORD_CREATE)",paramMap.toString());
+        System.out.println(message);
+        System.out.println(function.getExportParameterList());
+        throwExceptionOnError(function);
+
     }
 
     public static void commitTrans(JCoDestination dest) throws JCoException  {

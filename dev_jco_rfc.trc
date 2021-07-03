@@ -1,0 +1,48 @@
+
+**** Error file opened at 20210702 161234 British Summer Time Rel. 3.0.14 (2015-12-16) [721.619]
+Error:  >Fri Jul 02 16:12:34,021<    RfcException:
+    message: Connect to SAP gateway failed
+Connection parameters: TYPE=A DEST=whatever ASHOST=185.208.175.208 SYSNR=85 PCS=1
+
+LOCATION    CPIC (TCP/IP) on local host with Unicode
+ERROR       partner '185.208.175.208:3385' not reached
+TIME        Fri Jul 02 16:12:33 2021
+RELEASE     721
+COMPONENT   NI (network interface)
+VERSION     40
+RC          -10
+MODULE      nixxi.cpp
+LINE        3283
+DETAIL      NiPConnect2: 185.208.175.208:3385
+SYSTEM CALL connect
+ERRNO       10061
+ERRNO TEXT  WSAECONNREFUSED: Connection refused
+COUNTER     2
+
+    return code: RFC_FAILURE (1)
+    error group: 102
+    key: RFC_ERROR_COMMUNICATION
+
+**** Error file opened at 20210702 161247 British Summer Time Rel. 3.0.14 (2015-12-16) [721.619]
+Error:  >Fri Jul 02 16:12:47,974<    RfcException:
+    message: Connect to SAP gateway failed
+Connection parameters: TYPE=A DEST=whatever ASHOST=185.208.175.208 SYSNR=01 PCS=1
+
+LOCATION    CPIC (TCP/IP) on local host with Unicode
+ERROR       partner '185.208.175.208:3301' not reached
+TIME        Fri Jul 02 16:12:47 2021
+RELEASE     721
+COMPONENT   NI (network interface)
+VERSION     40
+RC          -10
+MODULE      nixxi.cpp
+LINE        3283
+DETAIL      NiPConnect2: 185.208.175.208:3301
+SYSTEM CALL connect
+ERRNO       10061
+ERRNO TEXT  WSAECONNREFUSED: Connection refused
+COUNTER     2
+
+    return code: RFC_FAILURE (1)
+    error group: 102
+    key: RFC_ERROR_COMMUNICATION

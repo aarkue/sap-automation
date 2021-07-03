@@ -1,23 +1,21 @@
-import com.sap.conn.jco.JCoContext;
-import com.sap.conn.jco.JCoDestination;
-import com.sap.conn.jco.JCoException;
+import com.sap.conn.jco.*;
 
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Random;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class Example {
 
-    public static void exampleProcess(ExampleRepository transRepo, JCoDestination dest, Map<String,String> paramMap_inquiry){
+    public static void exampleProcess(ExampleRepository transRepo, JCoDestination dest, Map<String,String> paramMap_prodord){
         Random fRandom = new Random();
         try {
             try {
                 // start the session
                 JCoContext.begin(dest);
                 double delayTime = 7.0;
-                transRepo.createInquiry(dest,paramMap_inquiry);
+//                transRepo.createInquiry(dest,paramMap_inquiry);
+                transRepo.createProductionOrder(dest,paramMap_prodord);
                 transRepo.commitTrans(dest);
                 try {
                     TimeUnit.SECONDS.sleep((long) delayTime);
@@ -25,6 +23,9 @@ public class Example {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
+            } catch (Exception e ){
+                System.out.println(e);
+                e.printStackTrace();
             }
             finally {
                 // clean ups
@@ -32,6 +33,7 @@ public class Example {
             }
         }
         catch(JCoException e) {
+            System.out.println(e);
             e.printStackTrace();
         }
     }
@@ -42,21 +44,32 @@ public class Example {
         sapCredential.put("client","800");
         sapCredential.put("user","m4jid1");
         sapCredential.put("passwd","m4jidabap");
-        sapCredential.put("sysnr","0");
+        sapCredential.put("sysnr","00");
         sapCredential.put("lang","en");
         ExampleSAPConnector sapConnector = new ExampleSAPConnector(sapCredential);
         JCoDestination dest = sapConnector.getDestination();
         ExampleRepository transRepo = new ExampleRepository();
 
         Map<String,String> paramMap_inquiry = new LinkedHashMap<String,String>();
-        paramMap_inquiry.put("INQUIRY_NUMBER", "0015000300");
+        paramMap_inquiry.put("INQUIRY_NUMBER", "0015000303");
         paramMap_inquiry.put("DOC_TYPE", "ZPIN");
         paramMap_inquiry.put("SALES_ORG", "1000");
         paramMap_inquiry.put("DISTR_CHAN", "10");
         paramMap_inquiry.put("DIVISION", "00");
         paramMap_inquiry.put("PARTN_NUMB", "0000001032");
 
-        exampleProcess(transRepo,dest, paramMap_inquiry);
+//        exampleProcess(transRepo,dest,paramMap_inquiry);
+
+
+        Map<String,String> paramMap_prodord = new LinkedHashMap<>();
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+        paramMap_prodord.put("MATERIAL","000000000050066346");
+        paramMap_prodord.put("PLANT", "1000");
+        paramMap_prodord.put("PLANNING_PLANT", "1000");
+        paramMap_prodord.put("ORDER_TYPE", "PP01");
+        paramMap_prodord.put("QUANTITY", "111");
+        paramMap_prodord.put("BASIC_END_DATE", "2021-07-18");
+        exampleProcess(transRepo,dest, paramMap_prodord);
 
     }
 }
