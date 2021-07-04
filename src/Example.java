@@ -14,9 +14,8 @@ public class Example {
                 // start the session
                 JCoContext.begin(dest);
                 double delayTime = 7.0;
-//                transRepo.createInquiry(dest,paramMap_inquiry);
-//                transRepo.createProductionOrder(dest,paramMap.get("createProductionOrder"));
-                transRepo.planMaterial(dest,paramMap.get("planMaterial"));
+                transRepo.releasePurchaseReq(dest, paramMap.get("releasePurchaseReq1"));
+                transRepo.releasePurchaseReq(dest, paramMap.get("releasePurchaseReq2"));
                 transRepo.commitTrans(dest);
                 try {
                     TimeUnit.SECONDS.sleep((long) delayTime);
@@ -72,17 +71,26 @@ public class Example {
         paramMap_prodord.put("ORDER_TYPE", "PP01");
         paramMap_prodord.put("QUANTITY", "111");
         paramMap_prodord.put("BASIC_END_DATE", "2021-07-18");
-        allParameter.put("createProductionOrder",paramMap_prodord);
+        allParameter.put("createProductionOrder", paramMap_prodord);
 
-        Map<String,String> paramMap_planmat = new LinkedHashMap<>();
-        paramMap_planmat.put("MATERIAL","DPC1018");
-        paramMap_planmat.put("PLANT","1000");
-        paramMap_planmat.put("MRP_AREA","1000");
-//        paramMap_planmat.put("PLAN_SCENARIO","1");
-//        paramMap_planmat.put("MATERIAL_LONG","000000000000000000000000000000000DPC1015");
-        allParameter.put("planMaterial",paramMap_planmat);
+        Map<String, String> paramMap_planmat = new LinkedHashMap<>();
+        paramMap_planmat.put("MATERIAL", "DPC1018");
+        paramMap_planmat.put("PLANT", "1000");
+        paramMap_planmat.put("MRP_AREA", "1000");
+        allParameter.put("planMaterial", paramMap_planmat);
 
-        exampleProcess(transRepo,dest, allParameter);
+        Map<String, String> paramMap_releasePR1 = new LinkedHashMap<>();
+        paramMap_releasePR1.put("NUMBER", "0010044647");
+        paramMap_releasePR1.put("REL_CODE", "04");
+        allParameter.put("releasePurchaseReq1", paramMap_releasePR1);
+
+        Map<String, String> paramMap_releasePR2 = new LinkedHashMap<>();
+        paramMap_releasePR2.put("NUMBER", "0010044647");
+        paramMap_releasePR2.put("REL_CODE", "02");
+        allParameter.put("releasePurchaseReq2", paramMap_releasePR2);
+
+
+        exampleProcess(transRepo, dest, allParameter);
 
     }
 }
