@@ -7,7 +7,7 @@ import java.util.concurrent.TimeUnit;
 
 public class Example {
 
-    public static void exampleProcess(ExampleRepository transRepo, JCoDestination dest, Map<String,String> paramMap_prodord){
+    public static void exampleProcess(ExampleRepository transRepo, JCoDestination dest, Map<String,Map<String,String>> paramMap){
         Random fRandom = new Random();
         try {
             try {
@@ -15,7 +15,8 @@ public class Example {
                 JCoContext.begin(dest);
                 double delayTime = 7.0;
 //                transRepo.createInquiry(dest,paramMap_inquiry);
-                transRepo.createProductionOrder(dest,paramMap_prodord);
+//                transRepo.createProductionOrder(dest,paramMap.get("createProductionOrder"));
+                transRepo.planMaterial(dest,paramMap.get("planMaterial"));
                 transRepo.commitTrans(dest);
                 try {
                     TimeUnit.SECONDS.sleep((long) delayTime);
@@ -50,6 +51,8 @@ public class Example {
         JCoDestination dest = sapConnector.getDestination();
         ExampleRepository transRepo = new ExampleRepository();
 
+        Map<String,Map<String,String>> allParameter = new LinkedHashMap<>();
+
         Map<String,String> paramMap_inquiry = new LinkedHashMap<String,String>();
         paramMap_inquiry.put("INQUIRY_NUMBER", "0015000303");
         paramMap_inquiry.put("DOC_TYPE", "ZPIN");
@@ -69,7 +72,17 @@ public class Example {
         paramMap_prodord.put("ORDER_TYPE", "PP01");
         paramMap_prodord.put("QUANTITY", "111");
         paramMap_prodord.put("BASIC_END_DATE", "2021-07-18");
-        exampleProcess(transRepo,dest, paramMap_prodord);
+        allParameter.put("createProductionOrder",paramMap_prodord);
+
+        Map<String,String> paramMap_planmat = new LinkedHashMap<>();
+        paramMap_planmat.put("MATERIAL","DPC1018");
+        paramMap_planmat.put("PLANT","1000");
+        paramMap_planmat.put("MRP_AREA","1000");
+//        paramMap_planmat.put("PLAN_SCENARIO","1");
+//        paramMap_planmat.put("MATERIAL_LONG","000000000000000000000000000000000DPC1015");
+        allParameter.put("planMaterial",paramMap_planmat);
+
+        exampleProcess(transRepo,dest, allParameter);
 
     }
 }
