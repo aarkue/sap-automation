@@ -85,40 +85,47 @@ public class ExampleRepository {
         function.getImportParameterList().setValue("ORDERDATA", orderData);
 
         function.execute(dest);
-        String message=String.format("Create ProdOrd with %s (BAPI_PRODORD_CREATE)",paramMap.toString());
+        String message = String.format("Create ProdOrd with %s (BAPI_PRODORD_CREATE)", paramMap.toString());
         System.out.println(message);
         System.out.println(function.getExportParameterList());
         throwExceptionOnError(function);
 
     }
 
-    public static void planMaterial(JCoDestination dest, Map<String,String> paramMap)  throws JCoException {
+    public static void planMaterial(JCoDestination dest, Map<String, String> paramMap) throws JCoException {
         JCoRepository sapRepository = dest.getRepository();
         JCoFunctionTemplate template = sapRepository.getFunctionTemplate("BAPI_MATERIAL_PLANNING");
         JCoFunction function = template.getFunction();
 
-        // MATERIAL
         function.getImportParameterList().setValue("MATERIAL", paramMap.get("MATERIAL"));
         function.getImportParameterList().setValue("PLANT", paramMap.get("PLANT"));
         function.getImportParameterList().setValue("MRP_AREA", paramMap.get("MRP_AREA"));
-//        JCoStructure material = function.getImportParameterList().getStructure("MATERIAL");
-//        material.setValue("MATERIAL", paramMap.get("MATERIAL"));
-//        material.setValue("PLANT", paramMap.get("PLANT"));
-//        material.setValue("MRP_AREA", paramMap.get("MRP_AREA"));
-//        material.setValue("PLAN_SCENARIO", paramMap.get("PLAN_SCENARIO"));
-//        material.setValue("MATERIAL_LONG", paramMap.get("MATERIAL_LONG"));
-       // function.getImportParameterList().setValue("MATERIAL", material);
 
         function.execute(dest);
-        String message=String.format("Plan Material with %s (BAPI_MATERIAL_PLANNING)",paramMap.toString());
+        String message = String.format("Plan Material with %s (BAPI_MATERIAL_PLANNING)", paramMap.toString());
 
         System.out.println(message);
         System.out.println(function.getExportParameterList());
         throwExceptionOnError(function);
-
     }
 
-    public static void commitTrans(JCoDestination dest) throws JCoException  {
+    public static void releasePurchaseReq(JCoDestination dest, Map<String, String> paramMap) throws JCoException {
+        JCoRepository sapRepository = dest.getRepository();
+        JCoFunctionTemplate template = sapRepository.getFunctionTemplate("BAPI_REQUISITION_RELEASE_GEN");
+        JCoFunction function = template.getFunction();
+
+        function.getImportParameterList().setValue("NUMBER", paramMap.get("NUMBER"));
+        function.getImportParameterList().setValue("REL_CODE", paramMap.get("REL_CODE"));
+        function.execute(dest);
+        String message = String.format("Release Purchase Requistion with %s (BAPI_REQUISITION_RELEASE_GEN)", paramMap.toString());
+
+        System.out.println(message);
+        System.out.println(function.getExportParameterList());
+        throwExceptionOnError(function);
+    }
+
+
+    public static void commitTrans(JCoDestination dest) throws JCoException {
         JCoRepository sapRepository = dest.getRepository();
         JCoFunctionTemplate template = sapRepository.getFunctionTemplate("BAPI_TRANSACTION_COMMIT");
         JCoFunction commFunct = template.getFunction();
