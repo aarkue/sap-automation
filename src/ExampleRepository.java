@@ -135,8 +135,8 @@ public class ExampleRepository {
         header.setValue("COMP_CODE", paramMap.get("COMP_CODE"));
         header.setValue("DOC_TYPE", "NB");
         header.setValue("CREAT_DATE", paramMap.get("CREAT_DATE"));
-        header.setValue("VENDOR", paramMap.get("VENDOR"));
-        header.setValue("SUPPL_VEND", paramMap.get("VENDOR"));
+//        header.setValue("VENDOR", paramMap.get("VENDOR"));
+//        header.setValue("SUPPL_VEND", paramMap.get("VENDOR"));
 
         header.setValue("PURCH_ORG", paramMap.get("PURCH_ORG"));
         header.setValue("PUR_GROUP", paramMap.get("PUR_GROUP"));
@@ -165,9 +165,9 @@ public class ExampleRepository {
         System.out.println(poItem);
         poItem.appendRow();
         poItem.setValue("PO_ITEM", "10");
-        poItem.setValue("MATERIAL", "DPC1018");
+//        poItem.setValue("MATERIAL", "DPC1018");
         poItem.setValue("PLANT", "1000");
-        poItem.setValue("QUANTITY", "111");
+//        poItem.setValue("QUANTITY", "111");
 //        poItem.setValue("NET_PRICE", "17.5");
         poItem.setValue("PREQ_NO", paramMap.get("PREQ_NO"));
         poItem.setValue("PREQ_ITEM", paramMap.get("PREQ_ITEM"));
@@ -178,9 +178,9 @@ public class ExampleRepository {
         System.out.println(poItemX);
         poItemX.appendRow();
         poItemX.setValue("PO_ITEM", "10");
-        poItemX.setValue("MATERIAL", "DPC1018");
+//        poItemX.setValue("MATERIAL", "DPC1018");
         poItemX.setValue("PLANT", "1000");
-        poItemX.setValue("QUANTITY", "111");
+//        poItemX.setValue("QUANTITY", "111");
 //        poItemX.setValue("NET_PRICE", "17.5");
         poItemX.setValue("PREQ_NO", paramMap.get("PREQ_NO"));
         poItemX.setValue("PREQ_ITEM", paramMap.get("PREQ_ITEM"));
