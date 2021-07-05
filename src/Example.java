@@ -14,6 +14,7 @@ public class Example {
                 // start the session
                 JCoContext.begin(dest);
                 double delayTime = 7.0;
+//                transRepo.planMaterial(dest,paramMap.get("planMaterial1"));
 //                transRepo.releasePurchaseReq(dest, paramMap.get("releasePurchaseReq1"));
 //                transRepo.releasePurchaseReq(dest, paramMap.get("releasePurchaseReq2"));
                 transRepo.convertPurchReqToOrder(dest, paramMap.get("convertPurchReqToOrder1"));
@@ -64,9 +65,9 @@ public class Example {
 //        exampleProcess(transRepo,dest,paramMap_inquiry);
 
 
-        Map<String,String> paramMap_prodord = new LinkedHashMap<>();
+        Map<String, String> paramMap_prodord = new LinkedHashMap<>();
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-        paramMap_prodord.put("MATERIAL","000000000050066346");
+        paramMap_prodord.put("MATERIAL", "000000000050066346");
         paramMap_prodord.put("PLANT", "1000");
         paramMap_prodord.put("PLANNING_PLANT", "1000");
         paramMap_prodord.put("ORDER_TYPE", "PP01");
@@ -74,31 +75,48 @@ public class Example {
         paramMap_prodord.put("BASIC_END_DATE", "2021-07-18");
         allParameter.put("createProductionOrder", paramMap_prodord);
 
-        Map<String, String> paramMap_planmat = new LinkedHashMap<>();
-        paramMap_planmat.put("MATERIAL", "DPC1018");
-        paramMap_planmat.put("PLANT", "1000");
-        paramMap_planmat.put("MRP_AREA", "1000");
-        allParameter.put("planMaterial", paramMap_planmat);
+        Map<String, String> paramMap_planmat1 = new LinkedHashMap<>();
+        paramMap_planmat1.put("MATERIAL", "DPC1015");
+        paramMap_planmat1.put("PLANT", "1000");
+        paramMap_planmat1.put("MRP_AREA", "1000");
+        allParameter.put("planMaterial1", paramMap_planmat1);
+
+        Map<String, String> paramMap_planmat2 = new LinkedHashMap<>();
+        paramMap_planmat2.put("MATERIAL", "DPC1018");
+        paramMap_planmat2.put("PLANT", "1000");
+        paramMap_planmat2.put("MRP_AREA", "1000");
+        allParameter.put("planMaterial2", paramMap_planmat2);
+
 
         Map<String, String> paramMap_releasePR1 = new LinkedHashMap<>();
-        paramMap_releasePR1.put("NUMBER", "0010044647");
+        paramMap_releasePR1.put("NUMBER", "0010044648");
         paramMap_releasePR1.put("REL_CODE", "04");
         allParameter.put("releasePurchaseReq1", paramMap_releasePR1);
 
         Map<String, String> paramMap_releasePR2 = new LinkedHashMap<>();
-        paramMap_releasePR2.put("NUMBER", "0010044647");
+        paramMap_releasePR2.put("NUMBER", "0010044648");
         paramMap_releasePR2.put("REL_CODE", "02");
         allParameter.put("releasePurchaseReq2", paramMap_releasePR2);
 
         Map<String, String> convertToPO1 = new LinkedHashMap<>();
         convertToPO1.put("COMP_CODE", "1000");
         convertToPO1.put("CREAT_DATE", "2021-07-05");
-        convertToPO1.put("VENDOR", "1005");
+        convertToPO1.put("VENDOR", "XXXX");
         convertToPO1.put("PURCH_ORG", "1000");
         convertToPO1.put("PUR_GROUP", "001");
-        convertToPO1.put("PREQ_NO", "0010044647");
+        convertToPO1.put("PREQ_NO", "0010044648");
         convertToPO1.put("PREQ_ITEM", "10");
         allParameter.put("convertPurchReqToOrder1", convertToPO1);
+
+        Map<String, String> convertToPO2 = new LinkedHashMap<>();
+        convertToPO2.put("COMP_CODE", "1000");
+        convertToPO2.put("CREAT_DATE", "2021-07-05");
+        convertToPO2.put("VENDOR", "1005");
+        convertToPO2.put("PURCH_ORG", "1000");
+        convertToPO2.put("PUR_GROUP", "001");
+        convertToPO2.put("PREQ_NO", "0010044647");
+        convertToPO2.put("PREQ_ITEM", "10");
+        allParameter.put("convertPurchReqToOrder2", convertToPO2);
 
 
         exampleProcess(transRepo, dest, allParameter);
