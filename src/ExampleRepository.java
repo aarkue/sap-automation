@@ -124,6 +124,91 @@ public class ExampleRepository {
         throwExceptionOnError(function);
     }
 
+    public static void convertPurchReqToOrder(JCoDestination dest, Map<String, String> paramMap) throws JCoException {
+        JCoRepository sapRepository = dest.getRepository();
+        JCoFunctionTemplate template = sapRepository.getFunctionTemplate("BAPI_PO_CREATE1");
+        JCoFunction function = template.getFunction();
+
+        // POHEADER
+        JCoStructure header = function.getImportParameterList().getStructure("POHEADER");
+        System.out.println(header);
+        header.setValue("COMP_CODE", paramMap.get("COMP_CODE"));
+        header.setValue("DOC_TYPE", "NB");
+        header.setValue("CREAT_DATE", paramMap.get("CREAT_DATE"));
+        header.setValue("VENDOR", paramMap.get("VENDOR"));
+        header.setValue("SUPPL_VEND", paramMap.get("VENDOR"));
+
+        header.setValue("PURCH_ORG", paramMap.get("PURCH_ORG"));
+        header.setValue("PUR_GROUP", paramMap.get("PUR_GROUP"));
+
+//        header.setValue("CURRENCY", "EUR");
+//        header.setValue("LANGU", "EN");
+
+        function.getImportParameterList().setValue("POHEADER", header);
+
+//        // POHEADERX
+//        JCoStructure headerX = function.getImportParameterList().getStructure("POHEADERX");
+//        System.out.println(headerX);
+//        headerX.setValue("COMP_CODE","X");
+//        headerX.setValue("DOC_TYPE","X");
+//        headerX.setValue("CREAT_DATE","X");
+//        headerX.setValue("VENDOR","X");
+//        headerX.setValue("PURCH_ORG","X");
+//        headerX.setValue("PUR_GROUP","X");
+//
+////        header.setValue("CREAT_DATE",paramMap.get("CREAT_DATE"));
+//
+//        function.getImportParameterList().setValue("POHEADERX", header);
+
+        // POITEM
+        JCoTable poItem = function.getTableParameterList().getTable("POITEM");
+        System.out.println(poItem);
+        poItem.appendRow();
+        poItem.setValue("PO_ITEM", "10");
+        poItem.setValue("MATERIAL", "DPC1018");
+        poItem.setValue("PLANT", "1000");
+        poItem.setValue("QUANTITY", "111");
+//        poItem.setValue("NET_PRICE", "17.5");
+        poItem.setValue("PREQ_NO", paramMap.get("PREQ_NO"));
+        poItem.setValue("PREQ_ITEM", paramMap.get("PREQ_ITEM"));
+        function.getTableParameterList().setValue("POITEM", poItem);
+
+        // POITEMX
+        JCoTable poItemX = function.getTableParameterList().getTable("POITEMX");
+        System.out.println(poItemX);
+        poItemX.appendRow();
+        poItemX.setValue("PO_ITEM", "10");
+        poItemX.setValue("MATERIAL", "DPC1018");
+        poItemX.setValue("PLANT", "1000");
+        poItemX.setValue("QUANTITY", "111");
+//        poItemX.setValue("NET_PRICE", "17.5");
+        poItemX.setValue("PREQ_NO", paramMap.get("PREQ_NO"));
+        poItemX.setValue("PREQ_ITEM", paramMap.get("PREQ_ITEM"));
+
+        function.getTableParameterList().setValue("POITEMX", poItemX);
+
+
+//        // POPARTNER
+//        JCoTable poPatner = function.getTableParameterList().getTable("POPARTNER");
+//        System.out.println(poPatner);
+//        poPatner.appendRow();
+//        poPatner.setValue("BUSPARTNO", "1005");
+//        poPatner.setValue("PARTNERDESC", "VN");
+//        poPatner.setValue("LANGU", "EN");
+//
+//        function.getTableParameterList().setValue("POPARTNER", poPatner);
+
+
+        function.execute(dest);
+
+
+        String message = String.format("Convert Purchase Requistion with %s (BAPI_PO_CREATE1)", paramMap.toString());
+
+        System.out.println(message);
+        System.out.println(function.getTableParameterList().getTable("RETURN"));
+        throwExceptionOnError(function);
+    }
+
 
     public static void commitTrans(JCoDestination dest) throws JCoException {
         JCoRepository sapRepository = dest.getRepository();
