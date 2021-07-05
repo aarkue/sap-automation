@@ -14,8 +14,9 @@ public class Example {
                 // start the session
                 JCoContext.begin(dest);
                 double delayTime = 7.0;
-                transRepo.releasePurchaseReq(dest, paramMap.get("releasePurchaseReq1"));
-                transRepo.releasePurchaseReq(dest, paramMap.get("releasePurchaseReq2"));
+//                transRepo.releasePurchaseReq(dest, paramMap.get("releasePurchaseReq1"));
+//                transRepo.releasePurchaseReq(dest, paramMap.get("releasePurchaseReq2"));
+                transRepo.convertPurchReqToOrder(dest, paramMap.get("convertPurchReqToOrder1"));
                 transRepo.commitTrans(dest);
                 try {
                     TimeUnit.SECONDS.sleep((long) delayTime);
@@ -88,6 +89,16 @@ public class Example {
         paramMap_releasePR2.put("NUMBER", "0010044647");
         paramMap_releasePR2.put("REL_CODE", "02");
         allParameter.put("releasePurchaseReq2", paramMap_releasePR2);
+
+        Map<String, String> convertToPO1 = new LinkedHashMap<>();
+        convertToPO1.put("COMP_CODE", "1000");
+        convertToPO1.put("CREAT_DATE", "2021-07-05");
+        convertToPO1.put("VENDOR", "1005");
+        convertToPO1.put("PURCH_ORG", "1000");
+        convertToPO1.put("PUR_GROUP", "001");
+        convertToPO1.put("PREQ_NO", "0010044647");
+        convertToPO1.put("PREQ_ITEM", "10");
+        allParameter.put("convertPurchReqToOrder1", convertToPO1);
 
 
         exampleProcess(transRepo, dest, allParameter);
