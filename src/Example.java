@@ -18,8 +18,10 @@ public class Example {
 //                transRepo.releasePurchaseReq(dest, paramMap.get("releasePurchaseReq1"));
 //                transRepo.releasePurchaseReq(dest, paramMap.get("releasePurchaseReq2"));
 //                transRepo.convertPurchReqToOrder(dest, paramMap.get("convertPurchReqToOrder1"));
-//                transRepo.releasePurchaseOrd(dest, paramMap.get("releasePurchaseOrd1"));
-                transRepo.goodsReceiptForPurchOrd(dest,paramMap.get("goodsReceiptForPurchOrd2"));
+//                transRepo.releasePurchaseOrd(dest, paramMap.get("releasePurchaseOrd2"));
+//                transRepo.goodsReceiptForPurchOrd(dest,paramMap.get("goodsReceiptForPurchOrd2"));
+//                transRepo.goodIssueForProd(dest,paramMap.get("goodIssueForProd"));
+                  transRepo.confirmProdOrd(dest,paramMap.get("confirmProdOrd"));
                 transRepo.commitTrans(dest);
                 try {
                     TimeUnit.SECONDS.sleep((long) delayTime);
@@ -120,21 +122,53 @@ public class Example {
         convertToPO2.put("PREQ_ITEM", "10");
         allParameter.put("convertPurchReqToOrder2", convertToPO2);
 
+        Map<String, String> paramMap_releasePO1 = new LinkedHashMap<>();
+        paramMap_releasePO1.put("PURCHASEORDER", "4500020255");
+        paramMap_releasePO1.put("PO_REL_CODE", "CE");
+        allParameter.put("releasePurchaseOrd1", paramMap_releasePO1);
+
         Map<String, String> paramMap_releasePO2 = new LinkedHashMap<>();
-        paramMap_releasePO2.put("PURCHASEORDER", "4500020255");
+        paramMap_releasePO2.put("PURCHASEORDER", "4500020254");
         paramMap_releasePO2.put("PO_REL_CODE", "CE");
         allParameter.put("releasePurchaseOrd2", paramMap_releasePO2);
 
+        Map<String, String> paramMap_goodsRecForPurchOrd1 = new LinkedHashMap<>();
+        paramMap_goodsRecForPurchOrd1.put("PSTNG_DATE", "2021-07-06");
+        paramMap_goodsRecForPurchOrd1.put("DOC_DATE", "2021-07-06");
+        paramMap_goodsRecForPurchOrd1.put("PO_NUMBER", "4500020255");
+        paramMap_goodsRecForPurchOrd1.put("PO_ITEM", "10");
+        paramMap_goodsRecForPurchOrd1.put("PLANT", "1000");
+        paramMap_goodsRecForPurchOrd1.put("STGE_LOC", "0001");
+
+        allParameter.put("goodsReceiptForPurchOrd2", paramMap_goodsRecForPurchOrd1);
 
         Map<String, String> paramMap_goodsRecForPurchOrd2 = new LinkedHashMap<>();
         paramMap_goodsRecForPurchOrd2.put("PSTNG_DATE", "2021-07-06");
         paramMap_goodsRecForPurchOrd2.put("DOC_DATE", "2021-07-06");
-        paramMap_goodsRecForPurchOrd2.put("PO_NUMBER", "4500020255");
+        paramMap_goodsRecForPurchOrd2.put("PO_NUMBER", "4500020254");
         paramMap_goodsRecForPurchOrd2.put("PO_ITEM", "10");
         paramMap_goodsRecForPurchOrd2.put("PLANT", "1000");
         paramMap_goodsRecForPurchOrd2.put("STGE_LOC", "0001");
 
         allParameter.put("goodsReceiptForPurchOrd2", paramMap_goodsRecForPurchOrd2);
+
+
+        Map<String, String> paramMap_goodsIssForProd = new LinkedHashMap<>();
+        paramMap_goodsIssForProd.put("PSTNG_DATE", "2021-07-06");
+        paramMap_goodsIssForProd.put("DOC_DATE", "2021-07-06");
+        paramMap_goodsIssForProd.put("ORDERID", "000000822327");
+        paramMap_goodsIssForProd.put("PLANT", "1000");
+        paramMap_goodsIssForProd.put("STGE_LOC", "0001");
+        paramMap_goodsIssForProd.put("MATERIAL1", "DPC1015");
+        paramMap_goodsIssForProd.put("MATERIAL2", "DPC1018");
+
+        allParameter.put("goodIssueForProd", paramMap_goodsIssForProd);
+
+        Map<String, String> paramMap_confirmProdOrd = new LinkedHashMap<>();
+        paramMap_confirmProdOrd.put("POSTG_DATE", "2021-07-06");
+        paramMap_confirmProdOrd.put("ORDERID", "000000822327");
+
+        allParameter.put("confirmProdOrd", paramMap_confirmProdOrd);
 
 
 

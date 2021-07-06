@@ -245,7 +245,7 @@ public class ExampleRepository {
         items.setValue("MOVE_TYPE", "101");
         items.setValue("MVT_IND", "B");
         items.setValue("NO_MORE_GR", "X");
-        items.setValue("ENTRY_QNT", "111"); // Can we omit that?
+        items.setValue("ENTRY_QNT", "111"); // Can we omit that? No! Otherwise it is posted with 0
 
 
         function.getTableParameterList().setValue("GOODSMVT_ITEM", items);
@@ -265,9 +265,84 @@ public class ExampleRepository {
         throwExceptionOnError(function);
     }
 
+    public static void goodIssueForProd(JCoDestination dest, Map<String, String> paramMap) throws JCoException {
+        JCoRepository sapRepository = dest.getRepository();
+        JCoFunctionTemplate template = sapRepository.getFunctionTemplate("BAPI_GOODSMVT_CREATE");
+        JCoFunction function = template.getFunction();
+
+        // GOODSMVT_HEADER
+        JCoStructure header = function.getImportParameterList().getStructure("GOODSMVT_HEADER");
+        header.setValue("PSTNG_DATE", paramMap.get("PSTNG_DATE"));
+        header.setValue("DOC_DATE", paramMap.get("DOC_DATE"));
+        function.getImportParameterList().setValue("GOODSMVT_HEADER", header);
+
+        // GOODSMVT_ITEM STRUCTURE
+        JCoTable items = function.getTableParameterList().getTable("GOODSMVT_ITEM");
+        items.appendRow();
+        items.setValue("ORDERID", paramMap.get("ORDERID"));
+        items.setValue("PLANT", paramMap.get("PLANT"));
+        items.setValue("STGE_LOC", paramMap.get("STGE_LOC"));
+        items.setValue("MOVE_TYPE", "261");
+        items.setValue("MATERIAL", paramMap.get("MATERIAL1"));
+        items.setValue("ENTRY_QNT", "111"); // Can we omit that? No! Otherwise it is posted with 0
+        items.setValue("WITHDRAWN", "X");
+//        items.setValue("NO_MORE_GR", "X");
+
+        items.appendRow();
+
+        items.setValue("ORDERID", paramMap.get("ORDERID"));
+        items.setValue("PLANT", paramMap.get("PLANT"));
+        items.setValue("STGE_LOC", paramMap.get("STGE_LOC"));
+        items.setValue("MOVE_TYPE", "261");
+        items.setValue("MATERIAL", paramMap.get("MATERIAL2"));
+        items.setValue("ENTRY_QNT", "111"); // Can we omit that? No! Otherwise it is posted with 0
+        items.setValue("WITHDRAWN", "X");
+//        items.setValue("NO_MORE_GR", "X");
+
+        function.getTableParameterList().setValue("GOODSMVT_ITEM", items);
 
 
-    public static void commitTrans(JCoDestination dest) throws JCoException {
+        JCoStructure goodsmvtCode = function.getImportParameterList().getStructure("GOODSMVT_CODE");
+        goodsmvtCode.setValue("GM_CODE","03");
+        function.getImportParameterList().setValue("GOODSMVT_CODE", goodsmvtCode);
+
+
+
+        function.execute(dest);
+        String message = String.format("Goods Issue for Production Order with %s (BAPI_GOODSMVT_CREATE)", paramMap.toString());
+
+        System.out.println(message);
+        System.out.println(function.getExportParameterList());
+        throwExceptionOnError(function);
+    }
+
+    public static void confirmProdOrd(JCoDestination dest, Map<String, String> paramMap) throws JCoException {
+        JCoRepository sapRepository = dest.getRepository();
+        JCoFunctionTemplate template = sapRepository.getFunctionTemplate("BAPI_PRODORDCONF_CREATE_HDR");
+        JCoFunction function = template.getFunction();
+
+        // GOODSMVT_ITEM STRUCTURE
+        JCoTable athdrlevels = function.getTableParameterList().getTable("ATHDRLEVELS");
+        athdrlevels.appendRow();
+        athdrlevels.setValue("ORDERID", paramMap.get("ORDERID"));
+        athdrlevels.setValue("FIN_CONF", "X");
+        athdrlevels.setValue("POSTG_DATE", paramMap.get("POSTG_DATE"));
+        athdrlevels.setValue("YIELD", "111");
+        athdrlevels.setValue("SCRAP", "0");
+
+        function.getTableParameterList().setValue("ATHDRLEVELS", athdrlevels);
+
+        function.execute(dest);
+        String message = String.format("Confirmation for Production Order with %s (BAPI_PRODORDCONF_CREATE_HDR)", paramMap.toString());
+
+        System.out.println(message);
+        System.out.println(function.getExportParameterList());
+        throwExceptionOnError(function);
+    }
+
+
+
+        public static void commitTrans(JCoDestination dest) throws JCoException {
         JCoRepository sapRepository = dest.getRepository();
         JCoFunctionTemplate template = sapRepository.getFunctionTemplate("BAPI_TRANSACTION_COMMIT");
         JCoFunction commFunct = template.getFunction();
