@@ -224,6 +224,48 @@ public class ExampleRepository {
         throwExceptionOnError(function);
     }
 
+    public static void goodsReceiptForPurchOrd(JCoDestination dest, Map<String, String> paramMap) throws JCoException {
+        JCoRepository sapRepository = dest.getRepository();
+        JCoFunctionTemplate template = sapRepository.getFunctionTemplate("BAPI_GOODSMVT_CREATE");
+        JCoFunction function = template.getFunction();
+
+        // GOODSMVT_HEADER
+        JCoStructure header = function.getImportParameterList().getStructure("GOODSMVT_HEADER");
+        header.setValue("PSTNG_DATE", paramMap.get("PSTNG_DATE"));
+        header.setValue("DOC_DATE", paramMap.get("DOC_DATE"));
+        function.getImportParameterList().setValue("GOODSMVT_HEADER", header);
+
+        // GOODSMVT_ITEM STRUCTURE
+        JCoTable items = function.getTableParameterList().getTable("GOODSMVT_ITEM");
+        items.appendRow();
+        items.setValue("PO_NUMBER", paramMap.get("PO_NUMBER"));
+        items.setValue("PO_ITEM", paramMap.get("PO_ITEM"));
+        items.setValue("PLANT", paramMap.get("PLANT"));
+        items.setValue("STGE_LOC", paramMap.get("STGE_LOC"));
+        items.setValue("MOVE_TYPE", "101");
+        items.setValue("MVT_IND", "B");
+        items.setValue("NO_MORE_GR", "X");
+        items.setValue("ENTRY_QNT", "111"); // Can we omit that?
+
+
+        function.getTableParameterList().setValue("GOODSMVT_ITEM", items);
+
+
+        JCoStructure goodsmvtCode = function.getImportParameterList().getStructure("GOODSMVT_CODE");
+        goodsmvtCode.setValue("GM_CODE","01");
+        function.getImportParameterList().setValue("GOODSMVT_CODE", goodsmvtCode);
+
+
+
+        function.execute(dest);
+        String message = String.format("Goods Receipt for Purchase Order with %s (BAPI_GOODSMVT_CREATE)", paramMap.toString());
+
+        System.out.println(message);
+        System.out.println(function.getExportParameterList());
+        throwExceptionOnError(function);
+    }
+
+
 
     public static void commitTrans(JCoDestination dest) throws JCoException {
         JCoRepository sapRepository = dest.getRepository();
