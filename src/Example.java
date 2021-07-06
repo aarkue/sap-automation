@@ -17,7 +17,8 @@ public class Example {
 //                transRepo.planMaterial(dest,paramMap.get("planMaterial1"));
 //                transRepo.releasePurchaseReq(dest, paramMap.get("releasePurchaseReq1"));
 //                transRepo.releasePurchaseReq(dest, paramMap.get("releasePurchaseReq2"));
-                transRepo.convertPurchReqToOrder(dest, paramMap.get("convertPurchReqToOrder1"));
+//                transRepo.convertPurchReqToOrder(dest, paramMap.get("convertPurchReqToOrder1"));
+                transRepo.releasePurchaseOrd(dest, paramMap.get("releasePurchaseOrd1"));
                 transRepo.commitTrans(dest);
                 try {
                     TimeUnit.SECONDS.sleep((long) delayTime);
@@ -117,6 +118,11 @@ public class Example {
         convertToPO2.put("PREQ_NO", "0010044647");
         convertToPO2.put("PREQ_ITEM", "10");
         allParameter.put("convertPurchReqToOrder2", convertToPO2);
+
+        Map<String, String> paramMap_releasePO2 = new LinkedHashMap<>();
+        paramMap_releasePO2.put("PURCHASEORDER", "4500020255");
+        paramMap_releasePO2.put("PO_REL_CODE", "CE");
+        allParameter.put("releasePurchaseOrd1", paramMap_releasePO2);
 
 
         exampleProcess(transRepo, dest, allParameter);
