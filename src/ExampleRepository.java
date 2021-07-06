@@ -209,6 +209,21 @@ public class ExampleRepository {
         throwExceptionOnError(function);
     }
 
+    public static void releasePurchaseOrd(JCoDestination dest, Map<String, String> paramMap) throws JCoException {
+        JCoRepository sapRepository = dest.getRepository();
+        JCoFunctionTemplate template = sapRepository.getFunctionTemplate("BAPI_PO_RELEASE");
+        JCoFunction function = template.getFunction();
+
+        function.getImportParameterList().setValue("PURCHASEORDER", paramMap.get("PURCHASEORDER"));
+        function.getImportParameterList().setValue("PO_REL_CODE", paramMap.get("PO_REL_CODE"));
+        function.execute(dest);
+        String message = String.format("Release Purchase Order with %s (BAPI_PO_RELEASE)", paramMap.toString());
+
+        System.out.println(message);
+        System.out.println(function.getExportParameterList());
+        throwExceptionOnError(function);
+    }
+
 
     public static void commitTrans(JCoDestination dest) throws JCoException {
         JCoRepository sapRepository = dest.getRepository();
