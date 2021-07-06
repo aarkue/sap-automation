@@ -18,7 +18,8 @@ public class Example {
 //                transRepo.releasePurchaseReq(dest, paramMap.get("releasePurchaseReq1"));
 //                transRepo.releasePurchaseReq(dest, paramMap.get("releasePurchaseReq2"));
 //                transRepo.convertPurchReqToOrder(dest, paramMap.get("convertPurchReqToOrder1"));
-                transRepo.releasePurchaseOrd(dest, paramMap.get("releasePurchaseOrd1"));
+//                transRepo.releasePurchaseOrd(dest, paramMap.get("releasePurchaseOrd1"));
+                transRepo.goodsReceiptForPurchOrd(dest,paramMap.get("goodsReceiptForPurchOrd2"));
                 transRepo.commitTrans(dest);
                 try {
                     TimeUnit.SECONDS.sleep((long) delayTime);
@@ -122,7 +123,19 @@ public class Example {
         Map<String, String> paramMap_releasePO2 = new LinkedHashMap<>();
         paramMap_releasePO2.put("PURCHASEORDER", "4500020255");
         paramMap_releasePO2.put("PO_REL_CODE", "CE");
-        allParameter.put("releasePurchaseOrd1", paramMap_releasePO2);
+        allParameter.put("releasePurchaseOrd2", paramMap_releasePO2);
+
+
+        Map<String, String> paramMap_goodsRecForPurchOrd2 = new LinkedHashMap<>();
+        paramMap_goodsRecForPurchOrd2.put("PSTNG_DATE", "2021-07-06");
+        paramMap_goodsRecForPurchOrd2.put("DOC_DATE", "2021-07-06");
+        paramMap_goodsRecForPurchOrd2.put("PO_NUMBER", "4500020255");
+        paramMap_goodsRecForPurchOrd2.put("PO_ITEM", "10");
+        paramMap_goodsRecForPurchOrd2.put("PLANT", "1000");
+        paramMap_goodsRecForPurchOrd2.put("STGE_LOC", "0001");
+
+        allParameter.put("goodsReceiptForPurchOrd2", paramMap_goodsRecForPurchOrd2);
+
 
 
         exampleProcess(transRepo, dest, allParameter);
