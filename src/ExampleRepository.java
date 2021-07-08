@@ -21,12 +21,13 @@ public class ExampleRepository {
             for (int i = 0; i < tabProfiles.getNumRows(); i++, tabProfiles.nextRow()) {
                 resultType = tabProfiles.getChar("TYPE");
                 if (resultType == 'E' || resultType == 'A') {
-//					  throw new RuntimeException(tabProfiles.getString("MESSAGE"));
                     message= "ERROR: " + tabProfiles.getString("MESSAGE");
-//				  System.out.println("ERROR: " + tabProfiles.getString("MESSAGE"));
+                System.out.println(message);
+                  throw new RuntimeException(tabProfiles.getString("MESSAGE"));
+
                 }else if (resultType == 'W') {
                     message= "Warning: " + tabProfiles.getString("MESSAGE");
-//				  System.out.println("Warning: " + tabProfiles.getString("MESSAGE"));
+				  System.out.println(message);
                 }
             }
         } catch(Exception e) {
@@ -66,7 +67,14 @@ public class ExampleRepository {
         throwExceptionOnError(function);
     }
 
-    public static void createProductionOrder(JCoDestination dest, Map<String,String> paramMap)  throws JCoException {
+    /**
+     *
+     * @param dest
+     * @param paramMap
+     * @return Order Number (e.g. 000000822328)
+     * @throws JCoException
+     */
+    public static String createProductionOrder(JCoDestination dest, Map<String,String> paramMap)  throws JCoException {
         JCoRepository sapRepository = dest.getRepository();
         JCoFunctionTemplate template = sapRepository.getFunctionTemplate("BAPI_PRODORD_CREATE");
         JCoFunction function = template.getFunction();
@@ -89,7 +97,27 @@ public class ExampleRepository {
         System.out.println(message);
         System.out.println(function.getExportParameterList());
         throwExceptionOnError(function);
+        return function.getExportParameterList().getValue(0).toString();
+    }
 
+    public static String getReservationOfProOrder(JCoDestination dest, String prodOrdID)  throws JCoException {
+        JCoRepository sapRepository = dest.getRepository();
+        JCoFunctionTemplate template = sapRepository.getFunctionTemplate("BAPI_PRODORD_GET_DETAIL");
+        JCoFunction function = template.getFunction();
+
+
+        function.getImportParameterList().setValue("NUMBER", prodOrdID);
+
+
+        // ORDER_OBJECTS
+        JCoStructure orderObjects = function.getImportParameterList().getStructure("ORDER_OBJECTS");
+        orderObjects.setValue("HEADER","X");
+        function.getImportParameterList().setValue("ORDER_OBJECTS", orderObjects);
+
+        function.execute(dest);
+        System.out.println(function.getExportParameterList());
+        throwExceptionOnError(function);
+        return function.getTableParameterList().getTable("HEADER").getValue("RESERVATION_NUMBER").toString();
     }
 
     public static void planMaterial(JCoDestination dest, Map<String, String> paramMap) throws JCoException {
@@ -109,6 +137,57 @@ public class ExampleRepository {
         throwExceptionOnError(function);
     }
 
+    public static String createPurReq(JCoDestination dest, Map<String, String> paramMap) throws JCoException {
+        JCoRepository sapRepository = dest.getRepository();
+        JCoFunctionTemplate template = sapRepository.getFunctionTemplate("BAPI_PR_CREATE");
+        JCoFunction function = template.getFunction();
+
+
+        // PRHEADER
+        JCoStructure header = function.getImportParameterList().getStructure("PRHEADER");
+        header.setValue("PR_TYPE", "NB");
+        header.setValue("AUTO_SOURCE","X");
+        function.getImportParameterList().setValue("PRHEADER", header);
+
+        // PRHEADERX
+        JCoStructure headerX = function.getImportParameterList().getStructure("PRHEADERX");
+        headerX.setValue("PR_TYPE", "X");
+        headerX.setValue("AUTO_SOURCE","X");
+        function.getImportParameterList().setValue("PRHEADERX", headerX);
+
+
+        // PRITEM
+        JCoTable prItem = function.getTableParameterList().getTable("PRITEM");
+        prItem.appendRow();
+        // Assumes that there is only one item to consider (first=10) in the PR
+        prItem.setValue("PREQ_ITEM", "10");
+        prItem.setValue("PLANT", "1000");
+        prItem.setValue("MATERIAL", paramMap.get("MATERIAL"));
+        prItem.setValue("QUANTITY", paramMap.get("QUANTITY"));
+        function.getTableParameterList().setValue("PRITEM", prItem);
+
+        // PRITEMX
+        JCoTable prItemX = function.getTableParameterList().getTable("PRITEMX");
+        prItemX.appendRow();
+        // Assumes that there is only one item to consider (first=10) in the PR
+        prItemX.setValue("PREQ_ITEM", "10");
+        prItemX.setValue("PREQ_ITEMX", "X");
+        prItemX.setValue("PLANT", "X");
+        prItemX.setValue("MATERIAL", "X");
+        prItemX.setValue("QUANTITY","X");
+        function.getTableParameterList().setValue("PRITEMX", prItemX);
+
+
+
+        function.execute(dest);
+        String message = String.format("Create Purchase Requisition with %s (BAPI_PR_CREATE)", paramMap.toString());
+
+        System.out.println(message);
+        System.out.println(function.getExportParameterList());
+        throwExceptionOnError(function);
+        return function.getExportParameterList().getValue(0).toString();
+    }
+
     public static void releasePurchaseReq(JCoDestination dest, Map<String, String> paramMap) throws JCoException {
         JCoRepository sapRepository = dest.getRepository();
         JCoFunctionTemplate template = sapRepository.getFunctionTemplate("BAPI_REQUISITION_RELEASE_GEN");
@@ -124,80 +203,51 @@ public class ExampleRepository {
         throwExceptionOnError(function);
     }
 
-    public static void convertPurchReqToOrder(JCoDestination dest, Map<String, String> paramMap) throws JCoException {
+    public static String convertPurchReqToOrder(JCoDestination dest, Map<String, String> paramMap) throws JCoException {
         JCoRepository sapRepository = dest.getRepository();
         JCoFunctionTemplate template = sapRepository.getFunctionTemplate("BAPI_PO_CREATE1");
         JCoFunction function = template.getFunction();
 
         // POHEADER
         JCoStructure header = function.getImportParameterList().getStructure("POHEADER");
-        System.out.println(header);
         header.setValue("COMP_CODE", paramMap.get("COMP_CODE"));
         header.setValue("DOC_TYPE", "NB");
         header.setValue("CREAT_DATE", paramMap.get("CREAT_DATE"));
-//        header.setValue("VENDOR", paramMap.get("VENDOR"));
-//        header.setValue("SUPPL_VEND", paramMap.get("VENDOR"));
-
         header.setValue("PURCH_ORG", paramMap.get("PURCH_ORG"));
         header.setValue("PUR_GROUP", paramMap.get("PUR_GROUP"));
 
-//        header.setValue("CURRENCY", "EUR");
-//        header.setValue("LANGU", "EN");
-
         function.getImportParameterList().setValue("POHEADER", header);
 
-//        // POHEADERX
-//        JCoStructure headerX = function.getImportParameterList().getStructure("POHEADERX");
-//        System.out.println(headerX);
-//        headerX.setValue("COMP_CODE","X");
-//        headerX.setValue("DOC_TYPE","X");
-//        headerX.setValue("CREAT_DATE","X");
-//        headerX.setValue("VENDOR","X");
-//        headerX.setValue("PURCH_ORG","X");
-//        headerX.setValue("PUR_GROUP","X");
-//
-////        header.setValue("CREAT_DATE",paramMap.get("CREAT_DATE"));
-//
-//        function.getImportParameterList().setValue("POHEADERX", header);
+
+        // POHEADERX
+        JCoStructure headerX = function.getImportParameterList().getStructure("POHEADERX");
+        headerX.setValue("COMP_CODE", "X");
+        headerX.setValue("DOC_TYPE", "X");
+        headerX.setValue("CREAT_DATE", "X");
+        headerX.setValue("PURCH_ORG", "X");
+        headerX.setValue("PUR_GROUP", "X");
+
+        function.getImportParameterList().setValue("POHEADERX", headerX);
 
         // POITEM
         JCoTable poItem = function.getTableParameterList().getTable("POITEM");
-        System.out.println(poItem);
         poItem.appendRow();
+        // Assumes that there is only one item to consider (first=10) in the PR
         poItem.setValue("PO_ITEM", "10");
-//        poItem.setValue("MATERIAL", "DPC1018");
         poItem.setValue("PLANT", "1000");
-//        poItem.setValue("QUANTITY", "111");
-//        poItem.setValue("NET_PRICE", "17.5");
         poItem.setValue("PREQ_NO", paramMap.get("PREQ_NO"));
-        poItem.setValue("PREQ_ITEM", paramMap.get("PREQ_ITEM"));
+        poItem.setValue("PREQ_ITEM", "10");
         function.getTableParameterList().setValue("POITEM", poItem);
 
         // POITEMX
         JCoTable poItemX = function.getTableParameterList().getTable("POITEMX");
-        System.out.println(poItemX);
         poItemX.appendRow();
         poItemX.setValue("PO_ITEM", "10");
-//        poItemX.setValue("MATERIAL", "DPC1018");
-        poItemX.setValue("PLANT", "1000");
-//        poItemX.setValue("QUANTITY", "111");
-//        poItemX.setValue("NET_PRICE", "17.5");
-        poItemX.setValue("PREQ_NO", paramMap.get("PREQ_NO"));
-        poItemX.setValue("PREQ_ITEM", paramMap.get("PREQ_ITEM"));
+        poItemX.setValue("PLANT", "X");
+        poItemX.setValue("PREQ_NO", "X");
+        poItemX.setValue("PREQ_ITEM", "X");
 
         function.getTableParameterList().setValue("POITEMX", poItemX);
-
-
-//        // POPARTNER
-//        JCoTable poPatner = function.getTableParameterList().getTable("POPARTNER");
-//        System.out.println(poPatner);
-//        poPatner.appendRow();
-//        poPatner.setValue("BUSPARTNO", "1005");
-//        poPatner.setValue("PARTNERDESC", "VN");
-//        poPatner.setValue("LANGU", "EN");
-//
-//        function.getTableParameterList().setValue("POPARTNER", poPatner);
-
 
         function.execute(dest);
 
@@ -207,6 +257,7 @@ public class ExampleRepository {
         System.out.println(message);
         System.out.println(function.getTableParameterList().getTable("RETURN"));
         throwExceptionOnError(function);
+        return function.getExportParameterList().getValue(2).toString();
     }
 
     public static void releasePurchaseOrd(JCoDestination dest, Map<String, String> paramMap) throws JCoException {
@@ -245,7 +296,7 @@ public class ExampleRepository {
         items.setValue("MOVE_TYPE", "101");
         items.setValue("MVT_IND", "B");
         items.setValue("NO_MORE_GR", "X");
-        items.setValue("ENTRY_QNT", "111"); // Can we omit that? No! Otherwise it is posted with 0
+        items.setValue("ENTRY_QNT",  paramMap.get("ENTRY_QNT")); // Can we omit that? No! Otherwise it is posted with 0
 
 
         function.getTableParameterList().setValue("GOODSMVT_ITEM", items);
@@ -274,6 +325,7 @@ public class ExampleRepository {
         JCoStructure header = function.getImportParameterList().getStructure("GOODSMVT_HEADER");
         header.setValue("PSTNG_DATE", paramMap.get("PSTNG_DATE"));
         header.setValue("DOC_DATE", paramMap.get("DOC_DATE"));
+        header.setValue("REF_DOC_NO", paramMap.get("ORDERID"));
         function.getImportParameterList().setValue("GOODSMVT_HEADER", header);
 
         // GOODSMVT_ITEM STRUCTURE
@@ -284,20 +336,23 @@ public class ExampleRepository {
         items.setValue("STGE_LOC", paramMap.get("STGE_LOC"));
         items.setValue("MOVE_TYPE", "261");
         items.setValue("MATERIAL", paramMap.get("MATERIAL1"));
-        items.setValue("ENTRY_QNT", "111"); // Can we omit that? No! Otherwise it is posted with 0
+        items.setValue("ENTRY_QNT", paramMap.get("ENTRY_QNT1")); // Can we omit that? No! Otherwise it is posted with 0
         items.setValue("WITHDRAWN", "X");
-//        items.setValue("NO_MORE_GR", "X");
+        items.setValue("RESERV_NO",paramMap.get("RESERV_NO"));
+        items.setValue("RES_ITEM","1");
+//        items.setValue("MVT_IND", "F");
 
         items.appendRow();
-
         items.setValue("ORDERID", paramMap.get("ORDERID"));
         items.setValue("PLANT", paramMap.get("PLANT"));
         items.setValue("STGE_LOC", paramMap.get("STGE_LOC"));
         items.setValue("MOVE_TYPE", "261");
         items.setValue("MATERIAL", paramMap.get("MATERIAL2"));
-        items.setValue("ENTRY_QNT", "111"); // Can we omit that? No! Otherwise it is posted with 0
+        items.setValue("ENTRY_QNT", paramMap.get("ENTRY_QNT2"));
         items.setValue("WITHDRAWN", "X");
-//        items.setValue("NO_MORE_GR", "X");
+        items.setValue("RESERV_NO",paramMap.get("RESERV_NO"));
+        items.setValue("RES_ITEM","2");
+//        items.setValue("MVT_IND", "F");
 
         function.getTableParameterList().setValue("GOODSMVT_ITEM", items);
 
@@ -325,10 +380,10 @@ public class ExampleRepository {
         JCoTable athdrlevels = function.getTableParameterList().getTable("ATHDRLEVELS");
         athdrlevels.appendRow();
         athdrlevels.setValue("ORDERID", paramMap.get("ORDERID"));
-        athdrlevels.setValue("FIN_CONF", "X");
+        athdrlevels.setValue("FIN_CONF", paramMap.get("FIN_CONF"));
         athdrlevels.setValue("POSTG_DATE", paramMap.get("POSTG_DATE"));
-        athdrlevels.setValue("YIELD", "111");
-        athdrlevels.setValue("SCRAP", "0");
+        athdrlevels.setValue("YIELD", paramMap.get("YIELD"));
+        athdrlevels.setValue("SCRAP", paramMap.get("SCRAP"));
 
         function.getTableParameterList().setValue("ATHDRLEVELS", athdrlevels);
 
