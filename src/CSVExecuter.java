@@ -67,6 +67,8 @@ public class CSVExecuter {
     }
 
     private boolean executeOne(ExampleRepository repo,  JCoDestination dest, Map<String,String> params) throws JCoException {
+        // TODO: DATE
+        final String DATE = LocalDate.parse(params.get("time").split(" ")[0]).format(DateTimeFormatter.ISO_LOCAL_DATE);
 
         switch (params.get("activity")){
             case "create production order" -> {
@@ -114,8 +116,6 @@ public class CSVExecuter {
                 ExampleRepository.releasePurchaseReq(dest, sapParams);
             }
             case "convert to purchase order" -> {
-                // TODO: DATE
-                final String DATE = LocalDate.parse(params.get("time").split(" ")[0]).format(DateTimeFormatter.ISO_LOCAL_DATE);
                 final String purchReqID = parseSetValue(params.get("purchase_requisition"))[0];
                 final String purchOrdID = parseSetValue(params.get("purchase_order"))[0];
                 Map<String, String> sapParams = new HashMap<>();
@@ -134,7 +134,46 @@ public class CSVExecuter {
                 sapParams.put("PO_REL_CODE","CE");
                 ExampleRepository.releasePurchaseOrd(dest,sapParams);
             }
+            case "goods receipt for purchase order" -> {
+                final String purchOrdID = parseSetValue(params.get("purchase_order"))[0];
+                Map<String, String> sapParams = new HashMap<>();
+                sapParams.put("PSTNG_DATE", DATE);
+                sapParams.put("DOC_DATE", DATE);
+                sapParams.put("PO_NUMBER", idMap.get(purchOrdID));
+                sapParams.put("PO_ITEM", "10");
+                sapParams.put("PLANT", "1000");
+                sapParams.put("STGE_LOC", "0001");
+                sapParams.put("ENTRY_QNT", params.get("amount_material"));
+                ExampleRepository.goodsReceiptForPurchOrd(dest, sapParams);
+            }
 
+            case "goods issue for production order" -> {
+                final String prodOrderID = parseSetValue(params.get("production_order"))[0];
+                Map<String, String> sapParams = new HashMap<>();
+                sapParams.put("RESERV_NO", reservations.get(prodOrderID));
+                sapParams.put("ORDERID", idMap.get(prodOrderID));
+                sapParams.put("PSTNG_DATE", DATE);
+                sapParams.put("DOC_DATE", DATE);
+                sapParams.put("PLANT", "1000");
+                sapParams.put("STGE_LOC", "0001");
+                final String[] requiredMaterials = parseSetValue(params.get("required_material"));
+                for (int i = 0; i < requiredMaterials.length; i++) {
+                    sapParams.put("MATERIAL"+i, requiredMaterials[i]);
+                    //TODO: Assumes that all amounts are always equal
+                    sapParams.put("ENTRY_QNT"+i, params.get("amount_material"));
+                }
+                ExampleRepository.goodIssueForProd(dest, sapParams);
+            }
+            case "confirm production order" -> {
+                final String prodOrderID = parseSetValue(params.get("production_order"))[0];
+                Map<String, String> sapParams = new HashMap<>();
+                sapParams.put("POSTG_DATE", DATE);
+                sapParams.put("ORDERID", idMap.get(prodOrderID));
+                sapParams.put("FIN_CONF", "X");
+                sapParams.put("YIELD", params.get("amount_material"));
+                sapParams.put("SCRAP", "0");
+                ExampleRepository.confirmProdOrd(dest, sapParams);
+            }
             default -> {
                 System.err.println("Activity " + params.get("activity") + " is not known.");
                 System.err.println(params.toString());
