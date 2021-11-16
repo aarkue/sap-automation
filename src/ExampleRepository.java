@@ -115,7 +115,7 @@ public class ExampleRepository {
         function.getImportParameterList().setValue("ORDER_OBJECTS", orderObjects);
 
         function.execute(dest);
-        System.out.println(function.getExportParameterList());
+        System.out.println(function.getTableParameterList());
         throwExceptionOnError(function);
         return function.getTableParameterList().getTable("HEADER").getValue("RESERVATION_NUMBER").toString();
     }
@@ -330,28 +330,38 @@ public class ExampleRepository {
 
         // GOODSMVT_ITEM STRUCTURE
         JCoTable items = function.getTableParameterList().getTable("GOODSMVT_ITEM");
-        items.appendRow();
-        items.setValue("ORDERID", paramMap.get("ORDERID"));
-        items.setValue("PLANT", paramMap.get("PLANT"));
-        items.setValue("STGE_LOC", paramMap.get("STGE_LOC"));
-        items.setValue("MOVE_TYPE", "261");
-        items.setValue("MATERIAL", paramMap.get("MATERIAL1"));
-        items.setValue("ENTRY_QNT", paramMap.get("ENTRY_QNT1")); // Can we omit that? No! Otherwise it is posted with 0
-        items.setValue("WITHDRAWN", "X");
-        items.setValue("RESERV_NO",paramMap.get("RESERV_NO"));
-        items.setValue("RES_ITEM","1");
+
+        int i = 1;
+        while(paramMap.containsKey("MATERIAL"+i)){
+            items.appendRow();
+            items.setValue("ORDERID", paramMap.get("ORDERID"));
+            items.setValue("PLANT", paramMap.get("PLANT"));
+            items.setValue("STGE_LOC", paramMap.get("STGE_LOC"));
+            items.setValue("MOVE_TYPE", "261");
+            items.setValue("MATERIAL", paramMap.get("MATERIAL"+i));
+            items.setValue("ENTRY_QNT", paramMap.get("ENTRY_QNT"+i)); // Can we omit that? No! Otherwise it is posted with 0
+            items.setValue("WITHDRAWN", "X");
+            items.setValue("RESERV_NO",paramMap.get("RESERV_NO"));
+            items.setValue("RES_ITEM",""+i);
+
+            i++;
+        }
+
+
 //        items.setValue("MVT_IND", "F");
 
-        items.appendRow();
-        items.setValue("ORDERID", paramMap.get("ORDERID"));
-        items.setValue("PLANT", paramMap.get("PLANT"));
-        items.setValue("STGE_LOC", paramMap.get("STGE_LOC"));
-        items.setValue("MOVE_TYPE", "261");
-        items.setValue("MATERIAL", paramMap.get("MATERIAL2"));
-        items.setValue("ENTRY_QNT", paramMap.get("ENTRY_QNT2"));
-        items.setValue("WITHDRAWN", "X");
-        items.setValue("RESERV_NO",paramMap.get("RESERV_NO"));
-        items.setValue("RES_ITEM","2");
+
+//        Disabled, as CPN Execution (see  CSVExecuter) does these items individually
+//        items.appendRow();
+//        items.setValue("ORDERID", paramMap.get("ORDERID"));
+//        items.setValue("PLANT", paramMap.get("PLANT"));
+//        items.setValue("STGE_LOC", paramMap.get("STGE_LOC"));
+//        items.setValue("MOVE_TYPE", "261");
+//        items.setValue("MATERIAL", paramMap.get("MATERIAL2"));
+//        items.setValue("ENTRY_QNT", paramMap.get("ENTRY_QNT2"));
+//        items.setValue("WITHDRAWN", "X");
+//        items.setValue("RESERV_NO",paramMap.get("RESERV_NO"));
+//        items.setValue("RES_ITEM","2");
 //        items.setValue("MVT_IND", "F");
 
         function.getTableParameterList().setValue("GOODSMVT_ITEM", items);
