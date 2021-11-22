@@ -1,5 +1,7 @@
-import com.opencsv.*;
-import com.opencsv.exceptions.CsvValidationException;
+import com.opencsv.CSVParser;
+import com.opencsv.CSVParserBuilder;
+import com.opencsv.CSVReaderHeaderAware;
+import com.opencsv.CSVReaderHeaderAwareBuilder;
 import com.sap.conn.jco.JCoContext;
 import com.sap.conn.jco.JCoDestination;
 import com.sap.conn.jco.JCoException;
@@ -8,14 +10,10 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.sql.Time;
 import java.text.SimpleDateFormat;
-import java.time.Duration;
 import java.time.LocalDate;
-import java.time.Period;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalUnit;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -24,7 +22,8 @@ public class CSVExecuter {
     private Map<String,String> idMap = new HashMap<>();
     private Map<String,String> reservations = new HashMap<>();
     private Map<String,Set<String>> stillRequiredForProdOrd = new HashMap<>();
-    private Map<String,Set<String>> requiredForProdOrd = new HashMap<>();
+    private Map<String,Set<Pair<String,Integer>>> waitingForGI = new HashMap<>();
+    private Map<String,Map<String,Integer>> requiredForProdOrdIndex = new HashMap<>();
     private CSVReaderHeaderAware csvReader;
     public CSVExecuter(File csv){
         try {
@@ -94,12 +93,11 @@ public class CSVExecuter {
     }
 
     private boolean executeOne(ExampleRepository repo,  JCoDestination dest, Map<String,String> params) throws JCoException {
-        // TODO: DATE
-        final String DATE = LocalDate.parse(params.get(CSVField.TIME).split(" ")[0]).format(DateTimeFormatter.ISO_LOCAL_DATE);
+        final String DATE = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE);
         switch (params.get(CSVField.ACTIVITY)){
             case "create production order" -> {
                 // TODO: END_DATE ?
-                final String END_DATE = LocalDate.parse(params.get(CSVField.TIME).split(" ")[0]).plus(7, ChronoUnit.DAYS).format(DateTimeFormatter.ISO_LOCAL_DATE);
+                final String END_DATE = LocalDate.now().plus(20, ChronoUnit.DAYS).format(DateTimeFormatter.ISO_LOCAL_DATE);
                 final String prodOrderID = parseSetValue(params.get(CSVField.PRODUCTION_ORDER))[0];
                 Map<String, String> sapParams = new HashMap<>();
                 sapParams.put("MATERIAL", parseSetValue(params.get(CSVField.MATERIAL))[0]);
@@ -111,10 +109,12 @@ public class CSVExecuter {
                 String prodOrderID_SAP  = ExampleRepository.createProductionOrder(dest,sapParams);
                 // Save production order & reservation ID for further usage
                 idMap.put(prodOrderID,prodOrderID_SAP);
-
-                Set<String> reqSet = new HashSet<>();
-                reqSet.addAll(Arrays.asList(parseSetValue(params.get(CSVField.REQUIRED_MATERIAL))));
-                requiredForProdOrd.put(prodOrderID,reqSet);
+                HashMap<String,Integer> indices = new HashMap<>();
+                String[] reqMats = parseSetValue(params.get(CSVField.REQUIRED_MATERIAL));
+                for (int i = 0; i < reqMats.length; i++) {
+                    indices.put(reqMats[i],i+1);
+                }
+                requiredForProdOrdIndex.put(prodOrderID,indices);
 
                 Set<String> stillReqSet = new HashSet<>();
                 stillReqSet.addAll(Arrays.asList(parseSetValue(params.get(CSVField.REQUIRED_MATERIAL))));
@@ -196,10 +196,15 @@ public class CSVExecuter {
 
             case "goods issue for production order" -> {
                 final String prodOrderID = parseSetValue(params.get(CSVField.PRODUCTION_ORDER))[0];
-                final String[] reqMat = parseSetValue(params.get(CSVField.REQUIRED_MATERIAL));
-                stillRequiredForProdOrd.get(prodOrderID).remove(reqMat[0]);
+                final String reqMatName = parseSetValue(params.get(CSVField.REQUIRED_MATERIAL))[0];
+                final String reqMatAmount = parseSetValue(params.get(CSVField.AMOUNT))[0];
+                stillRequiredForProdOrd.get(prodOrderID).remove(reqMatName);
+
+                Set<Pair<String,Integer>> reqMatSet = waitingForGI.getOrDefault(prodOrderID,new HashSet<>());
+                reqMatSet.add(new Pair<>(reqMatName,Integer.parseInt(reqMatAmount)));
+                waitingForGI.put(prodOrderID,reqMatSet);
+
                 if(stillRequiredForProdOrd.get(prodOrderID).isEmpty()) {
-                    final String[] requiredMaterials = requiredForProdOrd.get(prodOrderID).toArray(new String[]{});
                     Map<String, String> sapParams = new HashMap<>();
                     sapParams.put("RESERV_NO", reservations.get(prodOrderID));
                     sapParams.put("ORDERID", idMap.get(prodOrderID));
@@ -207,10 +212,10 @@ public class CSVExecuter {
                     sapParams.put("DOC_DATE", DATE);
                     sapParams.put("PLANT", "1000");
                     sapParams.put("STGE_LOC", "0001");
-                    for (int i = 0; i < requiredMaterials.length; i++) {
-                        sapParams.put("MATERIAL" + (i + 1), requiredMaterials[i]);
-                        //TODO: Assumes that all amounts are always equal
-                        sapParams.put("ENTRY_QNT" + (i + 1), parseSetValue(params.get(CSVField.AMOUNT))[0]);
+                    for (Pair<String,Integer> reqMat : reqMatSet) {
+                        final Integer index = requiredForProdOrdIndex.get(prodOrderID).get(reqMat.a);
+                        sapParams.put("MATERIAL" + index, reqMat.a);
+                        sapParams.put("ENTRY_QNT" + index, reqMat.b.toString());
                     }
 
                     logExecution(params.get(CSVField.ACTIVITY), sapParams, params);
@@ -247,7 +252,7 @@ public class CSVExecuter {
 
     private void logExecution(String activity, Map<String,String> sapParams, Map<String,String> params){
         System.out.println("EXECUTING " + activity + " with SAP params: " + sapParams + "\t | \t(LOG: " + params + ")");
-        System.out.println("idMap: " + idMap.toString() + " \t reservations: " + reservations.toString() + " \t requiredForProdOrd: " + requiredForProdOrd.toString() + " \t stillRequiredForProdOrd: " + stillRequiredForProdOrd.toString());
+        System.out.println("idMap: " + idMap.toString() + " \t reservations: " + reservations.toString() + " \t requiredForProdOrdIndex: " + requiredForProdOrdIndex.toString() + " \t stillRequiredForProdOrd: " + stillRequiredForProdOrd.toString());
     }
 
     private String genRandom(){
@@ -264,5 +269,14 @@ public class CSVExecuter {
             e.printStackTrace();
         }
 
+    }
+
+    protected class Pair<A,B> {
+        public final A a;
+        public final B b;
+        public Pair(A a, B b){
+            this.a = a;
+            this.b = b;
+        }
     }
 }
