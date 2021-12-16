@@ -117,6 +117,7 @@ public class ExampleRepository {
         function.execute(dest);
         System.out.println(function.getTableParameterList());
         throwExceptionOnError(function);
+
         return function.getTableParameterList().getTable("HEADER").getValue("RESERVATION_NUMBER").toString();
     }
 
@@ -268,7 +269,22 @@ public class ExampleRepository {
         function.getImportParameterList().setValue("PURCHASEORDER", paramMap.get("PURCHASEORDER"));
         function.getImportParameterList().setValue("PO_REL_CODE", paramMap.get("PO_REL_CODE"));
         function.execute(dest);
-        String message = String.format("Release Purchase Order with %s (BAPI_PO_RELEASE)", paramMap.toString());
+        String message = String.format("Release/Reject Purchase Order with %s (BAPI_PO_RELEASE)", paramMap.toString());
+
+        System.out.println(message);
+        System.out.println(function.getExportParameterList());
+        throwExceptionOnError(function);
+    }
+
+    public static void resetPurchaseOrdRelease(JCoDestination dest, Map<String, String> paramMap) throws JCoException {
+        JCoRepository sapRepository = dest.getRepository();
+        JCoFunctionTemplate template = sapRepository.getFunctionTemplate("BAPI_PO_RESET_RELEASE");
+        JCoFunction function = template.getFunction();
+
+        function.getImportParameterList().setValue("PURCHASEORDER", paramMap.get("PURCHASEORDER"));
+        function.getImportParameterList().setValue("PO_REL_CODE", paramMap.get("PO_REL_CODE"));
+        function.execute(dest);
+        String message = String.format("Reset Release of Purchase Order with %s (BAPI_PO_RELEASE)", paramMap.toString());
 
         System.out.println(message);
         System.out.println(function.getExportParameterList());

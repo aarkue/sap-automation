@@ -1,15 +1,10 @@
-import com.opencsv.CSVParser;
-import com.opencsv.CSVParserBuilder;
-import com.opencsv.CSVReaderHeaderAware;
-import com.opencsv.CSVReaderHeaderAwareBuilder;
+import com.opencsv.*;
+import com.opencsv.exceptions.CsvException;
 import com.sap.conn.jco.JCoContext;
 import com.sap.conn.jco.JCoDestination;
 import com.sap.conn.jco.JCoException;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -25,11 +20,21 @@ public class CSVExecuter {
     private Map<String,Set<Pair<String,Integer>>> waitingForGI = new HashMap<>();
     private Map<String,Map<String,Integer>> requiredForProdOrdIndex = new HashMap<>();
     private CSVReaderHeaderAware csvReader;
+    private int numberOfEvents;
     public CSVExecuter(File csv){
         try {
             FileReader reader = new FileReader(csv);
             CSVParser csvParserSemiSep = new CSVParserBuilder().withSeparator(';').build();
             csvReader = new CSVReaderHeaderAwareBuilder(reader).withCSVParser(csvParserSemiSep).build();
+
+            // Get line count by counting all lines with a buffered reader (sadly opencsv does not have a corresponding own method)
+            // This also assumes that the number of lines in the file (minus one for the headers) corresponds to the number of events
+            BufferedReader bufferedReader = new BufferedReader(new FileReader((csv)));
+            int lineCount = 0;
+            while (bufferedReader.readLine() != null) {
+                lineCount++;
+            }
+            numberOfEvents = lineCount - 1;
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -49,23 +54,28 @@ public class CSVExecuter {
                 boolean csvFinished = false;
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                 Date previousDate = null;
-                do{
+
+                int i = 1;
+                do {
                     //for each line
                     Map<String, String> map = csvReader.readMap();
 
-                    if(map != null) {
+                    if (map != null) {
                         if (executeOne(repo, dest, map)) {
                             long timeDifference;
                             Date date = sdf.parse((map.get(CSVField.TIME)));
-                            if(previousDate == null){
+                            if (previousDate == null) {
                                 timeDifference = 0;
-                            }else{
-                                long diff =  date.getTime() - previousDate.getTime();
+                            } else {
+                                long diff = date.getTime() - previousDate.getTime();
                                 timeDifference = TimeUnit.MILLISECONDS.toHours(diff);
                                 System.out.println(diff + "; " + timeDifference);
                             }
                             previousDate = date;
-                            commitAndWait(dest,(timeDifference*0)+3);
+                            commitAndWait(dest, (timeDifference / 5) + 1);
+                            double percentageDone = (i / (double) numberOfEvents) * 100;
+                            System.out.println("------ Executed Event " + i++ + " of " + numberOfEvents + " (" + (Math.round(percentageDone * 100.0) / 100.0) + "%) ------");
+                            printFancyProgress(percentageDone);
                         }else{
                             return false;
                         }
@@ -173,11 +183,29 @@ public class CSVExecuter {
             case "release purchase order" -> {
                 final String purchOrdID = parseSetValue(params.get(CSVField.PURCHASE_ORDER))[0];
                 Map<String, String> sapParams = new HashMap<>();
-                sapParams.put("PURCHASEORDER",idMap.get(purchOrdID));
-                sapParams.put("PO_REL_CODE","CE");
+                sapParams.put("PURCHASEORDER", idMap.get(purchOrdID));
+                sapParams.put("PO_REL_CODE", "CE");
 
-                logExecution(params.get(CSVField.ACTIVITY),sapParams,params);
-                ExampleRepository.releasePurchaseOrd(dest,sapParams);
+                logExecution(params.get(CSVField.ACTIVITY), sapParams, params);
+                ExampleRepository.releasePurchaseOrd(dest, sapParams);
+            }
+            case "reject purchase order" -> {
+                final String purchOrdID = parseSetValue(params.get(CSVField.PURCHASE_ORDER))[0];
+                Map<String, String> sapParams = new HashMap<>();
+                sapParams.put("PURCHASEORDER", idMap.get(purchOrdID));
+                sapParams.put("PO_REL_CODE", "RE"); // RE: Reject/Block
+
+                logExecution(params.get(CSVField.ACTIVITY), sapParams, params);
+                ExampleRepository.releasePurchaseOrd(dest, sapParams);
+            }
+            case "reconsider purchase order" -> { // Reconsider = Reset blocked/rejected status of PO
+                final String purchOrdID = parseSetValue(params.get(CSVField.PURCHASE_ORDER))[0];
+                Map<String, String> sapParams = new HashMap<>();
+                sapParams.put("PURCHASEORDER", idMap.get(purchOrdID));
+                sapParams.put("PO_REL_CODE", "RE"); // RE: Reject/Block
+
+                logExecution(params.get(CSVField.ACTIVITY), sapParams, params);
+                ExampleRepository.resetPurchaseOrdRelease(dest, sapParams);
             }
             case "goods receipt for purchase order" -> {
                 final String purchOrdID = parseSetValue(params.get(CSVField.PURCHASE_ORDER))[0];
@@ -250,15 +278,31 @@ public class CSVExecuter {
         return cleanedValue.split(",");
     }
 
-    private void logExecution(String activity, Map<String,String> sapParams, Map<String,String> params){
+    private void logExecution(String activity, Map<String, String> sapParams, Map<String, String> params) {
         System.out.println("EXECUTING " + activity + " with SAP params: " + sapParams + "\t | \t(LOG: " + params + ")");
         System.out.println("idMap: " + idMap.toString() + " \t reservations: " + reservations.toString() + " \t requiredForProdOrdIndex: " + requiredForProdOrdIndex.toString() + " \t stillRequiredForProdOrd: " + stillRequiredForProdOrd.toString());
     }
 
-    private String genRandom(){
-        return Math.round(Math.random()*10000) + "";
+    private String genRandom() {
+        return Math.round(Math.random() * 10000) + "";
     }
 
+    public void printFancyProgress(double percentage) {
+        int numberOfCharsComplete = 150;
+        int numberOfChars = (int) (numberOfCharsComplete * (percentage / 100));
+        int numberOfBlanks = numberOfCharsComplete - numberOfChars;
+        System.out.print("|");
+        for (int i = 0; i < numberOfCharsComplete; i++) {
+            if (i < numberOfChars) {
+                System.out.print("=");
+            } else {
+                System.out.print(" ");
+            }
+        }
+        System.out.println("| (" + (Math.round(percentage * 100.0) / 100.0) + "%)");
+
+
+    }
 
     public static void commitAndWait(JCoDestination dest, long durationSeconds) throws JCoException {
         ExampleRepository.commitTrans(dest);
