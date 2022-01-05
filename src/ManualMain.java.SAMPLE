@@ -1,0 +1,46 @@
+import com.sap.conn.jco.JCoDestination;
+import com.sap.conn.jco.JCoException;
+
+import java.io.File;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
+import java.util.Map;
+
+public class ManualMain {
+
+    public static void main(String[] args) {
+        File csv = new File("input-small.csv");
+        CSVExecuter csvExecuter = new CSVExecuter(csv);
+        Map<String, String> sapCredential = new HashMap<>();
+        sapCredential.put("host", "127.0.0.1");
+        sapCredential.put("client", "800");
+        sapCredential.put("user", "user");
+        sapCredential.put("passwd", "password");
+        sapCredential.put("sysnr", "00");
+        sapCredential.put("lang", "en");
+        ExampleSAPConnector sapConnector = new ExampleSAPConnector(sapCredential);
+        try {
+            JCoDestination dest = sapConnector.getDestination();
+            ExampleRepository transRepo = new ExampleRepository();
+
+            final String DATE = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE);
+
+            Map<String, String> sapParams = new HashMap<>();
+            // convert to purchase order;2021-11-15 10:51:12;{};{};{HT-MEC0717};{300000};{70002};{954} PreqNr:0010045462
+            sapParams.put("COMP_CODE", "1000");
+            sapParams.put("CREAT_DATE", DATE);
+            sapParams.put("PURCH_ORG", "1000");
+            sapParams.put("PUR_GROUP", "001");
+            sapParams.put("PREQ_NO", "");
+            sapParams.put("QUANTITY", "954");
+            String purchOrdID_SAP = ExampleRepository.convertPurchReqToOrder(dest, sapParams);
+
+            ExampleRepository.commitTrans(dest);
+        } catch (JCoException e) {
+            e.printStackTrace();
+        }
+
+    }
+}

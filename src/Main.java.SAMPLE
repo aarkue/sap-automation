@@ -1,0 +1,30 @@
+import com.sap.conn.jco.JCoDestination;
+import com.sap.conn.jco.JCoException;
+
+import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
+
+public class Main {
+
+    public static void main(String[] args){
+        File csv = new File("input.csv");
+        CSVExecuter csvExecuter = new CSVExecuter(csv);
+        Map<String, String> sapCredential = new HashMap<>();
+        sapCredential.put("host", "127.0.0.1");
+        sapCredential.put("client", "800");
+        sapCredential.put("user", "user");
+        sapCredential.put("passwd", "password");
+        sapCredential.put("sysnr", "00");
+        sapCredential.put("lang", "en");
+        ExampleSAPConnector sapConnector = new ExampleSAPConnector(sapCredential);
+        try {
+            JCoDestination dest = sapConnector.getDestination();
+            ExampleRepository transRepo = new ExampleRepository();
+            csvExecuter.execute(transRepo,dest);
+        } catch (JCoException e) {
+            e.printStackTrace();
+        }
+
+    }
+}
