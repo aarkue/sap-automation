@@ -307,8 +307,9 @@ public class CSVExecuter {
     public static void commitAndWait(JCoDestination dest, long durationSeconds) throws JCoException {
         ExampleRepository.commitTrans(dest);
         try {
-            System.out.println("Waiting " + durationSeconds + "s before continuing");
-            TimeUnit.SECONDS.sleep(durationSeconds);
+            long timeToWait = durationSeconds+2;
+            System.out.println("Waiting " + timeToWait + "s before continuing");
+            TimeUnit.SECONDS.sleep(timeToWait);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
