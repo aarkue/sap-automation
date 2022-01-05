@@ -1,2 +1,4 @@
 # Project exclude paths
 /out/
+src/Main.java
+src/ManualMain.java
