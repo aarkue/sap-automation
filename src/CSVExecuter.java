@@ -19,6 +19,8 @@ public class CSVExecuter {
     private Map<String,Set<String>> stillRequiredForProdOrd = new HashMap<>();
     private Map<String,Set<Pair<String,Integer>>> waitingForGI = new HashMap<>();
     private Map<String,Map<String,Integer>> requiredForProdOrdIndex = new HashMap<>();
+
+    private Map<String,String> trackings = new HashMap<>();
     private CSVReaderHeaderAware csvReader;
     private int numberOfEvents;
     public CSVExecuter(File csv){
@@ -119,12 +121,6 @@ public class CSVExecuter {
                 String prodOrderID_SAP  = ExampleRepository.createProductionOrder(dest,sapParams);
                 // Save production order & reservation ID for further usage
                 idMap.put(prodOrderID,prodOrderID_SAP);
-                HashMap<String,Integer> indices = new HashMap<>();
-                String[] reqMats = parseSetValue(params.get(CSVField.REQUIRED_MATERIAL));
-                for (int i = 0; i < reqMats.length; i++) {
-                    indices.put(reqMats[i],i+1);
-                }
-                requiredForProdOrdIndex.put(prodOrderID,indices);
 
                 Set<String> stillReqSet = new HashSet<>();
                 stillReqSet.addAll(Arrays.asList(parseSetValue(params.get(CSVField.REQUIRED_MATERIAL))));
@@ -133,12 +129,25 @@ public class CSVExecuter {
                 logExecution(params.get(CSVField.ACTIVITY),sapParams,params);
                 String reservationID_SAP = ExampleRepository.getReservationOfProOrder(dest,prodOrderID_SAP);
                 reservations.put(prodOrderID,reservationID_SAP);
+
+                String[] reqMats = parseSetValue(params.get(CSVField.REQUIRED_MATERIAL));
+                HashMap<String,Integer> indices = new HashMap<>();
+                for (int i = 0; i < reqMats.length; i++) {
+                    indices.put(reqMats[i],i+1);
+                    reservations.put(reqMats[i],reservationID_SAP);
+                    trackings.put(reqMats[i],prodOrderID_SAP);
+                }
+                requiredForProdOrdIndex.put(prodOrderID,indices);
             }
             case "create purchase requisition" -> {
                 final String purchReqID = parseSetValue(params.get(CSVField.PURCHASE_REQUISITION))[0];
                 Map<String, String> sapParams = new HashMap<>();
-                sapParams.put("MATERIAL", parseSetValue(params.get(CSVField.REQUIRED_MATERIAL))[0]);
+                String material = parseSetValue(params.get(CSVField.REQUIRED_MATERIAL))[0];
+                sapParams.put("MATERIAL", material);
                 sapParams.put("QUANTITY", parseSetValue(params.get(CSVField.AMOUNT))[0]);
+                String reservation = reservations.get(parseSetValue(params.get(CSVField.REQUIRED_MATERIAL))[0]);
+                sapParams.put("RESERV_NO", reservation);
+                sapParams.put("TRACKINGNO", reservation + "_" + material);
 
                 logExecution(params.get(CSVField.ACTIVITY),sapParams,params);
                 String purchReqID_SAP = ExampleRepository.createPurReq(dest, sapParams);

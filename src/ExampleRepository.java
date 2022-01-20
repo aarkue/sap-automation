@@ -165,6 +165,8 @@ public class ExampleRepository {
         prItem.setValue("PLANT", "1000");
         prItem.setValue("MATERIAL", paramMap.get("MATERIAL"));
         prItem.setValue("QUANTITY", paramMap.get("QUANTITY"));
+        prItem.setValue("RESERV_NO", paramMap.get("RESERV_NO"));
+        prItem.setValue("TRACKINGNO", paramMap.get("TRACKINGNO"));
         function.getTableParameterList().setValue("PRITEM", prItem);
 
         // PRITEMX
@@ -176,6 +178,8 @@ public class ExampleRepository {
         prItemX.setValue("PLANT", "X");
         prItemX.setValue("MATERIAL", "X");
         prItemX.setValue("QUANTITY","X");
+        prItemX.setValue("RESERV_NO", "X");
+        prItemX.setValue("TRACKINGNO", "X");
         function.getTableParameterList().setValue("PRITEMX", prItemX);
 
 
